@@ -16,6 +16,9 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
+from edx_pr_webhooks import views
+
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^pr/', views.pull_request_created, name='pull_request_created'),
 ]
