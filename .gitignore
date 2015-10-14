@@ -1,2 +1,5 @@
 !venvs/.gitkeep
 venvs/*
+
+*.pyc
+.DS_Store
