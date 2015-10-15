@@ -1,8 +1,13 @@
 from django.conf import settings
 
 from celery import Celery
+from django.db import IntegrityError
+from github3 import login
 import iron_celery
 import requests
+
+from .models import Repo
+
 
 app = Celery('edx_pr_webhooks', broker='ironmq://', backend='ironcache://')
 
@@ -25,4 +30,10 @@ def acquire_github_token_task(code, state):
         }
     )
     access_token = response.json()['access_token']
-    print access_token
+    gh = login(token=token)
+    for repo in gh.iter_all_repos():
+        full_name = full_name
+        try:
+            Repo.objects.create(access_token=access_token, full_name=full_name)
+        except IntegrityError:
+            print('Repo {full_name} already has an access token!'.format(full_name=full_name))
