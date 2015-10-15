@@ -12,7 +12,7 @@ from .models import Repo
 app = Celery('edx_pr_webhooks', broker='ironmq://', backend='ironcache://')
 
 
-@app.task
+# @app.task
 def acquire_github_token_task(code, state):
     """
     Given a temporary Github code and the OAuth flow state token, get
@@ -29,10 +29,12 @@ def acquire_github_token_task(code, state):
             'state': state
         }
     )
+    print response.status_code
+    print response.content
     access_token = response.json()['access_token']
-    gh = login(token=token)
+    gh = login(token=access_token)
     for repo in gh.iter_all_repos():
-        full_name = full_name
+        full_name = repo.full_name
         try:
             Repo.objects.create(access_token=access_token, full_name=full_name)
         except IntegrityError:
