@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render_to_response
+from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
@@ -40,14 +41,18 @@ def index(request):
 @csrf_exempt
 def pull_request_created(request):
     request_body = json.loads(request.body)
+    print request_body
     action = request_body['action']
 
     if request_body.has_key('pull_request') and action == 'opened':
         comments_url = request_body['pull_request']['comments_url']
         repo = Repo.objects.get(full_name=request_body['repository']['full_name'])
+        template = loader.get_template('edx_pr_webhooks/pr_cover_letter.md')
         requests.post(
             comments_url,
-            data=json.dumps({"body": "Thanks for the PR! This is an example comment."}),
+            data=json.dumps({
+                "body": template.render({'username': request_body['pull_request']['user']['login']})
+            }),
             headers={"Authorization": "token {access_token}".format(access_token=repo.access_token)}
         )
     return HttpResponse()
