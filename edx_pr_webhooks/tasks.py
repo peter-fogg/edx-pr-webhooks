@@ -12,7 +12,7 @@ from .models import Repo
 app = Celery('edx_pr_webhooks', broker='ironmq://', backend='ironcache://')
 
 
-# @app.task
+@app.task
 def acquire_github_token_task(code, state):
     """
     Given a temporary Github code and the OAuth flow state token, get

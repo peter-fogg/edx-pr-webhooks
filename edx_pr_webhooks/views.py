@@ -66,7 +66,7 @@ def acquire_github_token(request):
         return HttpResponseForbidden('Your session has expired. Please try again.')
     # Get the temporary Github code to exchange for an OAuth token.
     code = request.GET['code']
-    acquire_github_token_task(code, state)
+    acquire_github_token_task.delay(code, state)
     return HttpResponseRedirect(reverse('index'))
 
 
