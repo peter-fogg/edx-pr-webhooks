@@ -99,8 +99,11 @@ GITHUB_OAUTH_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 GITHUB_API_SCOPES = 'repo'
 
 
-DATABASES = {}
-DATABASES['default'] =  dj_database_url.config()
+DATABASES = {
+    'default': dj_database_url.config(
+        default='postgres://edx_pr_webhooks:mypassword@127.0.0.1:5432/edx_pr_webhooks'
+    )
+}
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
