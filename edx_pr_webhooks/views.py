@@ -42,10 +42,10 @@ def pull_request_created(request):
     request_body = json.loads(request.body)
     action = request_body['action']
 
-    if request_body.has_key('pull_request') and action == 'created':
+    if request_body.has_key('pull_request') and action == 'opened':
         comments_url = request_body['pull_request']['comments_url']
         repo = Repo.objects.get(full_name=request_body['repository']['full_name'])
-        response = requests.post(
+        requests.post(
             comments_url,
             data=json.dumps({"body": "Thanks for the PR! This is an example comment."}),
             headers={"Authorization": "token {access_token}".format(access_token=repo.access_token)}
