@@ -4,7 +4,7 @@ Views for responding to Github API events.
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods
@@ -12,6 +12,8 @@ from urllib import urlencode
 from uuid import uuid4
 
 import requests
+
+from .tasks import acquire_github_token_task
 
 
 @require_GET
@@ -53,20 +55,8 @@ def acquire_github_token(request):
         return HttpResponseForbidden('Your session has expired. Please try again.')
     # Get the temporary Github code to exchange for an OAuth token.
     code = request.GET['code']
-    response = requests.post(
-        settings.GITHUB_OAUTH_TOKEN_URL,
-        headers={'accept': 'application/json'},
-        data={
-            'client_id': settings.GITHUB_OAUTH_CLIENT_ID,
-            'client_secret': settings.GITHUB_OAUTH_CLIENT_SECRET,
-            'code': code,
-            'redirect_uri': '',
-            'state': state
-        }
-    )
-    access_token = response.json()['access_token']
-    print access_token
-    return HttpResponse('')
+    acquire_github_token_task.delay(code, state)
+    return HttpResponseRedirect(reverse('index'))
 
 
 @require_GET
