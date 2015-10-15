@@ -1,18 +1,19 @@
 """
 Views for responding to Github API events.
 """
+import json
+import requests
+from urllib import urlencode
+from uuid import uuid4
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_http_methods
-from urllib import urlencode
-from uuid import uuid4
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
-import requests
-
+from .models import Repo
 from .tasks import acquire_github_token_task
 
 
@@ -35,11 +36,21 @@ def index(request):
     })
 
 
-@require_http_methods(('GET', 'POST'))
+@require_POST
 @csrf_exempt
 def pull_request_created(request):
-    print request.body
-    return HttpResponse("Lookin' good.")
+    request_body = json.loads(request.body)
+    action = request_body['action']
+
+    if request_body.has_key('pull_request') and action == 'created':
+        comments_url = request_body['pull_request']['comments_url']
+        repo = Repo.objects.get(full_name=request_body['repository']['full_name'])
+        response = requests.post(
+            comments_url,
+            data=json.dumps({"body": "Thanks for the PR! This is an example comment."}),
+            headers={"Authorization": "token {access_token}".format(access_token=repo.access_token)}
+        )
+    return HttpResponse()
 
 
 @require_GET
