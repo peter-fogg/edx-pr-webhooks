@@ -1,15 +1,12 @@
-from django.conf import settings
-
 from celery import Celery
 from django.db import IntegrityError
 from github3 import login
-import iron_celery
 import requests
 
+from .celery import app
 from .models import Repo
 
-
-app = Celery('edx_pr_webhooks', broker='ironmq://', backend='ironcache://')
+from django.conf import settings
 
 
 @app.task
