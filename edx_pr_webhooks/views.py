@@ -41,19 +41,23 @@ def index(request):
 @csrf_exempt
 def pull_request_created(request):
     request_body = json.loads(request.body)
-    print request_body
     action = request_body['action']
+    pull_request = request_body['pull_request']
 
     if request_body.has_key('pull_request') and action == 'opened':
-        comments_url = request_body['pull_request']['comments_url']
         repo = Repo.objects.get(full_name=request_body['repository']['full_name'])
         template = loader.get_template('edx_pr_webhooks/pr_cover_letter.md')
-        requests.post(
-            comments_url,
+        requests.patch(
+            pull_request['url'],
             data=json.dumps({
-                "body": template.render({'username': request_body['pull_request']['user']['login']})
+                'title': pull_request['title'],
+                'body': '{original_body}\n\n{cover_letter}'.format(
+                    original_body=pull_request['body'],
+                    cover_letter=template.render({'username': request_body['pull_request']['user']['login']})
+                ),
+                'state': pull_request['state']
             }),
-            headers={"Authorization": "token {access_token}".format(access_token=repo.access_token)}
+            headers={'Authorization': 'token {access_token}'.format(access_token=repo.access_token)}
         )
     return HttpResponse()
 
