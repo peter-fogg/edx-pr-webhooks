@@ -33,7 +33,7 @@ def acquire_github_token_task(code, state):
     print response.content
     access_token = response.json()['access_token']
     gh = login(token=access_token)
-    for repo in gh.iter_all_repos():
+    for repo in gh.iter_user_repos(gh.user().login, 'owner'):
         full_name = repo.full_name
         try:
             Repo.objects.create(access_token=access_token, full_name=full_name)
